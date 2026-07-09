@@ -18,7 +18,13 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - run: pip install -e ".[yaml,dev]"
       - run: pytest -q
-      - name: The example specs should report breaking changes
+      - name: The example specs must be reported as breaking
         run: |
-          openapi-diff examples/petstore-v1.yaml examples/petstore-v2.yaml --all && exit 1
-          test $? -eq 1
+          set +e
+          openapi-diff examples/petstore-v1.yaml examples/petstore-v2.yaml --all
+          status=$?
+          set -e
+          if [ "$status" -ne 1 ]; then
+            echo "expected exit 1 from the example diff, got $status"
+            exit 1
+          fi
